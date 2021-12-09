@@ -184,17 +184,21 @@ x = df %>%
 
 y = x %>% 
   group_by(val) %>% 
-  summarise(median_in = median(j_fimnnet_dv))
+  summarise(median_in = median(j_fimnnet_dv),
+            n = n()) %>% 
+  mutate(lab = paste0(val, "\nn = ", n, "\nm = ", round(median_in)))
 
 x %>% 
+  filter(!is.na(val)) %>% 
   left_join(y) %>% 
-  mutate(val = fct_reorder(val, median_in)) %>% 
-  ggplot(aes(val, j_fimnnet_dv)) +
+  mutate(lab = fct_reorder(lab, median_in)) %>% 
+  ggplot(aes(lab, j_fimnnet_dv)) +
   geom_boxplot() +
-  scale_y_log10() +
+  coord_cartesian(ylim = c(0, 4000)) +
   labs(title = "What is the monthly income of different transport modes?",
+       subtitle = "n = number in group, m = median of group.\nNote: y axis is cropped.",
        x = "",
-       y = "Income (£, log scale)") +
+       y = "Income (£)") +
   theme_temp()
 ```
 
