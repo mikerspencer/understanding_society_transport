@@ -1,4 +1,4 @@
-Transport
+Transport variable explore
 ================
 Mike Spencer
 25/11/2021
@@ -42,7 +42,7 @@ df %>%
   theme_temp()
 ```
 
-![](transport_files/figure-gfm/age-1.png)<!-- -->
+![](transport_explore_files/figure-gfm/age-1.png)<!-- -->
 
 ## Transport to work variables
 
@@ -201,7 +201,7 @@ df %>%
        y = "Respondents")
 ```
 
-![](transport_files/figure-gfm/work%20dist-1.png)<!-- -->
+![](transport_explore_files/figure-gfm/work%20dist-1.png)<!-- -->
 
 ## Individual income net
 
@@ -218,7 +218,7 @@ df %>%
   theme_temp()
 ```
 
-![](transport_files/figure-gfm/individual%20income-1.png)<!-- -->
+![](transport_explore_files/figure-gfm/individual%20income-1.png)<!-- -->
 
 ## Benefits
 

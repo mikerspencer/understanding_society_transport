@@ -1,0 +1,199 @@
+---
+title: "Transport variable explore"
+author: "Mike Spencer"
+date: "09/12/2021"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,
+                      message = F, warning = F,
+                      fig.width = 10, fig.height = 6)
+options(scipen = 999)
+```
+
+```{r packages}
+library(tidyverse)
+library(haven)
+library(knitr)
+```
+
+```{r plot theme}
+theme_temp = function(){
+  theme_bw() +
+    theme(text = element_text(size = 15))
+}
+```
+
+
+## Intro
+
+This is an RMarkdown document, summarising variables of interest.
+I'm considering the relationship between income and mode of travel.
+For example, is cycling the preserve of the affluent middle class?
+
+Understanding Society variable guide: <https://www.understandingsociety.ac.uk/documentation/mainstage/dataset-documentation?search_api_views_fulltext=salary>.
+
+```{r data}
+df = read_dta("~/Cloud/personal/gofcoe/understanding_society/6614stata_B17CC6790677EF32F72CE50881AE98E1B9FC1F79133B07B63B353396D3AB917A_V1/UKDA-6614-stata/stata/stata13_se/ukhls_w10/j_indresp.dta")
+```
+
+## Age
+
+```{r age}
+df %>% 
+  count(j_pdvage) %>% 
+  ggplot(aes(j_pdvage, n)) +
+  geom_col() +
+  labs(title = "Age of respondents",
+       x = "Age",
+       y = "Respondents") +
+  theme_temp()
+```
+
+
+## Transport to work variables
+
+### Main mode of transport to work
+
+```{r commute main}
+df %>% 
+  count(j_wktrvfar)
+```
+
+
+### Mode(s) of transport for journey to work
+
+Variables:
+
+* wktrv1 	Drive myself by car or van
+* wktrv2 	Get a lift with someone from household
+* wktrv3 	Get a lift with someone outside the household
+* wktrv4 	Motorcycle/moped/scooter
+* wktrv5 	Taxi/minicab
+* wktrv6 	Bus/coach
+* wktrv7 	Train
+* wktrv8 	Underground/Metro/Tram/Light railway
+* wktrv9 	Cycle
+* wktrv10 	Walk
+* wktrv97 	Other
+
+
+Response options:
+
+* Value = 0.0	Label = Not mentioned
+* Value = 1.0	Label = Yes mentioned
+* Value = -1.0	Label = don't know
+* Value = -9.0	Label = missing
+* Value = -8.0	Label = inapplicable
+* Value = -7.0	Label = proxy
+* Value = -2.0	Label = refusal
+
+Employed:
+
+```{r employed}
+df %>% 
+  select(pidp, contains("j_wktrv"), -j_wktrvfar) %>% 
+  pivot_longer(cols = !pidp) %>% 
+  count(name, value) %>% 
+  pivot_wider(names_from = name, values_from = n)
+```
+
+Self employed:
+
+```{r self employed}
+df %>% 
+  select(pidp, contains("j_jswktrv"), -j_jswktrvfar) %>% 
+  pivot_longer(cols = !pidp) %>% 
+  count(name, value) %>% 
+  pivot_wider(names_from = name, values_from = n)
+```
+
+Larissa Pople notes we can add together travel from employed and self employed categories.
+
+### How many people report multiple modes?
+
+```{r multi-report}
+df %>% 
+  select(pidp, contains("wktrv"), -j_wktrvfar, -j_jswktrvfar) %>% 
+  pivot_longer(cols = !pidp) %>% 
+  mutate(name = str_replace(name, "j_js", "j_")) %>% 
+  filter(value == 1) %>% 
+  count(pidp, name = "modes") %>% 
+  count(modes, name = "respondents")
+```
+
+
+### Distance to work
+
+```{r work dist}
+df %>% 
+  count(j_workdis)
+
+df %>% 
+  filter(j_workdis >= 0) %>% 
+  ggplot(aes(j_workdis)) +
+  geom_histogram() +
+  scale_x_log10() +
+  labs(title = "How far do respondents live from work?",
+       x = "Distance (miles, log scale)",
+       y = "Respondents")
+```
+
+
+## Individual income net
+
+```{r individual income}
+df %>% 
+  filter(! j_fimnnet_dv %in% c(-9, -8, -2, -1)) %>% 
+  transmute(j_fimnnet_dv = as.numeric(j_fimnnet_dv)) %>%
+  ggplot(aes(j_fimnnet_dv)) +
+  geom_histogram() +
+  scale_x_log10() +
+  labs(title = "Total net personal income",
+       x = "Income (£, log scale)",
+       y = "Respondents") +
+  theme_temp()
+```
+
+
+## Benefits
+
+### income support
+
+```{r income support}
+df %>% 
+  count(j_benbase1)
+```
+
+
+### job seekers
+
+```{r job seekers}
+df %>% 
+  count(j_benbase2)
+```
+
+
+### universal credit
+
+```{r universal credit}
+df %>% 
+  count(j_benbase4)
+```
+
+
+### Multiple benefits
+
+How many respondents claim one or multiple benefits, from income support, jobs seekers or universal credit.
+
+```{r multi benefits}
+df %>% 
+  select(pidp, j_benbase1, j_benbase2, j_benbase4) %>% 
+  pivot_longer(!pidp) %>% 
+  mutate(value = replace(value, value < 0, 0)) %>% 
+  group_by(pidp) %>% 
+  summarise(benefits = sum(value)) %>% 
+  count(benefits)
+```
+
