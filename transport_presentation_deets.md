@@ -125,8 +125,10 @@ df %>%
 ## Results
 
 ``` r
-df %>% 
-  filter(j_wktrv1 == 1) %>% 
+x = df %>% 
+  filter(j_wktrv1 == 1)
+
+x %>% 
   ggplot(aes(j_workdis)) +
   stat_ecdf() +
   geom_vline(xintercept = 1.5, linetype = "dotted") +
@@ -140,6 +142,8 @@ df %>%
 ```
 
 ![](transport_presentation_deets_files/figure-gfm/distance%20mode-1.png)<!-- -->
+
+640 of 9871 (6 %) of respondents drive to work is 1 mile :-(
 
 ``` r
 tran_opt = tibble(name = paste0("j_wktrv", c(1:10, 97)),

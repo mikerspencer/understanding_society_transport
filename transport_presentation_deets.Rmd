@@ -146,8 +146,10 @@ df %>%
 ## Results
 
 ```{r distance mode}
-df %>% 
-  filter(j_wktrv1 == 1) %>% 
+x = df %>% 
+  filter(j_wktrv1 == 1)
+
+x %>% 
   ggplot(aes(j_workdis)) +
   stat_ecdf() +
   geom_vline(xintercept = 1.5, linetype = "dotted") +
@@ -159,6 +161,8 @@ df %>%
        y = "Percent of respondents") +
   theme_temp()
 ```
+
+`r sum(x$j_workdis == 1)` of `r nrow(x)` (`r round(100 * sum(x$j_workdis == 1) / nrow(x))` %) of respondents drive to work is 1 mile :-(
 
 
 ```{r income}
