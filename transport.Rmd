@@ -6,7 +6,10 @@ output: github_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE,
+                      message = F, warning = F,
+                      fig.width = 10, fig.height = 6)
+options(scipen = 999)
 ```
 
 ```{r packages}
@@ -15,13 +18,39 @@ library(haven)
 library(knitr)
 ```
 
+```{r plot theme}
+theme_temp = function(){
+  theme_bw() +
+    theme(text = element_text(size = 15))
+}
+```
+
 
 ## Intro
 
+This is an RMarkdown document, summarising variables of interest.
+I'm considering the relationship between income and mode of travel.
+For example, is cycling the preserve of the affluent middle class?
+
+Understanding Society variable guide: <https://www.understandingsociety.ac.uk/documentation/mainstage/dataset-documentation?search_api_views_fulltext=salary>.
 
 ```{r data}
 df = read_dta("~/Cloud/personal/gofcoe/understanding_society/6614stata_B17CC6790677EF32F72CE50881AE98E1B9FC1F79133B07B63B353396D3AB917A_V1/UKDA-6614-stata/stata/stata13_se/ukhls_w10/j_indresp.dta")
 ```
+
+## Age
+
+```{r age}
+df %>% 
+  count(j_pdvage) %>% 
+  ggplot(aes(j_pdvage, n)) +
+  geom_col() +
+  labs(title = "Age of respondents",
+       x = "Age",
+       y = "Respondents") +
+  theme_temp()
+```
+
 
 ## Transport to work variables
 
@@ -80,7 +109,7 @@ df %>%
   pivot_wider(names_from = name, values_from = n)
 ```
 
-Larissa Pople states that I can add together travel from employed and self employed categories.
+Larissa Pople notes we can add together travel from employed and self employed categories.
 
 ### How many people report multiple modes?
 
@@ -95,20 +124,76 @@ df %>%
 ```
 
 
-## Income data
+### Distance to work
 
-### Hours worked
-
-```{r hours}
+```{r work dist}
 df %>% 
-  count(j_jbhrs)
+  count(j_workdis)
+
+df %>% 
+  filter(j_workdis >= 0) %>% 
+  ggplot(aes(j_workdis)) +
+  geom_histogram() +
+  scale_x_log10() +
+  labs(title = "How far do respondents live from work?",
+       x = "Distance (miles, log scale)",
+       y = "Respondents")
 ```
 
 
-### Usual pay
+## Individual income net
 
-```{r usual pay}
+```{r individual income}
 df %>% 
-  count(j_payu)
+  filter(! j_fimnnet_dv %in% c(-9, -8, -2, -1)) %>% 
+  transmute(j_fimnnet_dv = as.numeric(j_fimnnet_dv)) %>%
+  ggplot(aes(j_fimnnet_dv)) +
+  geom_histogram() +
+  scale_x_log10() +
+  labs(title = "Total net personal income",
+       x = "Income (£, log scale)",
+       y = "Respondents") +
+  theme_temp()
+```
+
+
+## Benefits
+
+### income support
+
+```{r income support}
+df %>% 
+  count(j_benbase1)
+```
+
+
+### job seekers
+
+```{r job seekers}
+df %>% 
+  count(j_benbase2)
+```
+
+
+### universal credit
+
+```{r universal credit}
+df %>% 
+  count(j_benbase4)
+```
+
+
+### Multiple benefits
+
+How many respondents claim one or multiple benefits, from income support, jobs seekers or universal credit.
+
+```{r multi benefits}
+df %>% 
+  select(pidp, j_benbase1, j_benbase2, j_benbase4) %>% 
+  pivot_longer(!pidp) %>% 
+  mutate(value = replace(value, value < 0, 0)) %>% 
+  group_by(pidp) %>% 
+  summarise(benefits = sum(value)) %>% 
+  count(benefits)
 ```
 

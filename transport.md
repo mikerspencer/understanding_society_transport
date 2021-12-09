@@ -5,29 +5,44 @@ Mike Spencer
 
 ``` r
 library(tidyverse)
-```
-
-    ## ── Attaching packages ─────────────────────────────────────── tidyverse 1.3.1 ──
-
-    ## ✓ ggplot2 3.3.3     ✓ purrr   0.3.4
-    ## ✓ tibble  3.1.2     ✓ dplyr   1.0.6
-    ## ✓ tidyr   1.1.3     ✓ stringr 1.4.0
-    ## ✓ readr   1.4.0     ✓ forcats 0.5.1
-
-    ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
-    ## x dplyr::filter() masks stats::filter()
-    ## x dplyr::lag()    masks stats::lag()
-
-``` r
 library(haven)
 library(knitr)
 ```
 
+``` r
+theme_temp = function(){
+  theme_bw() +
+    theme(text = element_text(size = 15))
+}
+```
+
 ## Intro
+
+This is an RMarkdown document, summarising variables of interest. I’m
+considering the relationship between income and mode of travel. For
+example, is cycling the preserve of the affluent middle class?
+
+Understanding Society variable guide:
+<https://www.understandingsociety.ac.uk/documentation/mainstage/dataset-documentation?search_api_views_fulltext=salary>.
 
 ``` r
 df = read_dta("~/Cloud/personal/gofcoe/understanding_society/6614stata_B17CC6790677EF32F72CE50881AE98E1B9FC1F79133B07B63B353396D3AB917A_V1/UKDA-6614-stata/stata/stata13_se/ukhls_w10/j_indresp.dta")
 ```
+
+## Age
+
+``` r
+df %>% 
+  count(j_pdvage) %>% 
+  ggplot(aes(j_pdvage, n)) +
+  geom_col() +
+  labs(title = "Age of respondents",
+       x = "Age",
+       y = "Respondents") +
+  theme_temp()
+```
+
+![](transport_files/figure-gfm/age-1.png)<!-- -->
 
 ## Transport to work variables
 
@@ -127,8 +142,8 @@ df %>%
     ## # … with 5 more variables: j_jswktrv6 <int>, j_jswktrv7 <int>,
     ## #   j_jswktrv8 <int>, j_jswktrv9 <int>, j_jswktrv97 <int>
 
-Larissa Pople states that I can add together travel from employed and
-self employed categories.
+Larissa Pople notes we can add together travel from employed and self
+employed categories.
 
 ### How many people report multiple modes?
 
@@ -153,48 +168,127 @@ df %>%
     ## 6     6           2
     ## 7     7           1
 
-## Income data
-
-### Hours worked
+### Distance to work
 
 ``` r
 df %>% 
-  count(j_jbhrs)
+  count(j_workdis)
 ```
 
-    ## # A tibble: 181 x 2
-    ##              j_jbhrs     n
+    ## # A tibble: 133 x 2
+    ##    j_workdis     n
+    ##        <dbl> <int>
+    ##  1        -8 16190
+    ##  2        -7   804
+    ##  3        -2    91
+    ##  4        -1   777
+    ##  5         0   611
+    ##  6         1  1989
+    ##  7         2  1622
+    ##  8         3  1571
+    ##  9         4  1013
+    ## 10         5  1304
+    ## # … with 123 more rows
+
+``` r
+df %>% 
+  filter(j_workdis >= 0) %>% 
+  ggplot(aes(j_workdis)) +
+  geom_histogram() +
+  scale_x_log10() +
+  labs(title = "How far do respondents live from work?",
+       x = "Distance (miles, log scale)",
+       y = "Respondents")
+```
+
+![](transport_files/figure-gfm/work%20dist-1.png)<!-- -->
+
+## Individual income net
+
+``` r
+df %>% 
+  filter(! j_fimnnet_dv %in% c(-9, -8, -2, -1)) %>% 
+  transmute(j_fimnnet_dv = as.numeric(j_fimnnet_dv)) %>%
+  ggplot(aes(j_fimnnet_dv)) +
+  geom_histogram() +
+  scale_x_log10() +
+  labs(title = "Total net personal income",
+       x = "Income (£, log scale)",
+       y = "Respondents") +
+  theme_temp()
+```
+
+![](transport_files/figure-gfm/individual%20income-1.png)<!-- -->
+
+## Benefits
+
+### income support
+
+``` r
+df %>% 
+  count(j_benbase1)
+```
+
+    ## # A tibble: 5 x 2
+    ##           j_benbase1     n
     ##            <dbl+lbl> <int>
-    ##  1 -8 [inapplicable] 17724
-    ##  2 -2 [refusal]        117
-    ##  3 -1 [don't know]     229
-    ##  4  0.1                 12
-    ##  5  1                   14
-    ##  6  1.5                  5
-    ##  7  2                   37
-    ##  8  2.5                  2
-    ##  9  3                   36
-    ## 10  3.5                  3
-    ## # … with 171 more rows
+    ## 1 -7 [proxy]           804
+    ## 2 -2 [refusal]         161
+    ## 3 -1 [don't know]      219
+    ## 4  0 [Not mentioned] 32457
+    ## 5  1 [Mentioned]       677
 
-### Usual pay
+### job seekers
 
 ``` r
 df %>% 
-  count(j_payu)
+  count(j_benbase2)
 ```
 
-    ## # A tibble: 424 x 2
-    ##    j_payu     n
-    ##     <dbl> <int>
-    ##  1     -8 32322
-    ##  2     -7   804
-    ##  3     -2    28
-    ##  4     -1    92
-    ##  5      0    16
-    ##  6      5     1
-    ##  7      6     1
-    ##  8      7     2
-    ##  9      8     4
-    ## 10      9     3
-    ## # … with 414 more rows
+    ## # A tibble: 5 x 2
+    ##           j_benbase2     n
+    ##            <dbl+lbl> <int>
+    ## 1 -7 [proxy]           804
+    ## 2 -2 [refusal]         161
+    ## 3 -1 [don't know]      219
+    ## 4  0 [Not mentioned] 32885
+    ## 5  1 [Mentioned]       249
+
+### universal credit
+
+``` r
+df %>% 
+  count(j_benbase4)
+```
+
+    ## # A tibble: 5 x 2
+    ##           j_benbase4     n
+    ##            <dbl+lbl> <int>
+    ## 1 -7 [proxy]           804
+    ## 2 -2 [refusal]         161
+    ## 3 -1 [don't know]      219
+    ## 4  0 [Not mentioned] 32377
+    ## 5  1 [Mentioned]       757
+
+### Multiple benefits
+
+How many respondents claim one or multiple benefits, from income
+support, jobs seekers or universal credit.
+
+``` r
+df %>% 
+  select(pidp, j_benbase1, j_benbase2, j_benbase4) %>% 
+  pivot_longer(!pidp) %>% 
+  mutate(value = replace(value, value < 0, 0)) %>% 
+  group_by(pidp) %>% 
+  summarise(benefits = sum(value)) %>% 
+  count(benefits)
+```
+
+    ## # A tibble: 4 x 2
+    ##   benefits     n
+    ##      <dbl> <int>
+    ## 1        0 32668
+    ## 2        1  1618
+    ## 3        2    31
+    ## 4        3     1
