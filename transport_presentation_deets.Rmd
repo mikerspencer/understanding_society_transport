@@ -154,15 +154,20 @@ x %>%
   stat_ecdf() +
   geom_vline(xintercept = 1.5, linetype = "dotted") +
   geom_vline(xintercept = 5, linetype = "dashed") +
-  scale_x_continuous(limits = c(0, 80)) +
+  geom_vline(xintercept = 10, linetype = "dotdash") +
+  coord_cartesian(xlim = c(0, 30)) +
   scale_y_continuous(labels = scales::percent) +
-  labs(title = "How many car commutes could be walked or cycled?",
+  labs(title = "How many car commutes could be active travel?",
+       subtitle = "Vertical lines of: walking, cycling, e-cycling.",
        x = "Distance to work",
        y = "Percent of respondents") +
   theme_temp()
 ```
 
-`r sum(x$j_workdis == 1)` of `r nrow(x)` (`r round(100 * sum(x$j_workdis == 1) / nrow(x))` %) of respondents drive to work is 1 mile :-(
+* `r sum(x$j_workdis == 1)` of `r nrow(x)` (`r round(100 * sum(x$j_workdis == 1) / nrow(x))` %) of respondents drive to work is 1 mile :-(
+* `r sum(x$j_workdis < 1.5)` of `r nrow(x)` (`r round(100 * sum(x$j_workdis < 1.5) / nrow(x))` %) of respondents drive to work is less than walking distance (1.5 miles)
+* `r sum(x$j_workdis < 5)` of `r nrow(x)` (`r round(100 * sum(x$j_workdis < 5) / nrow(x))` %) of respondents drive to work is less than cycling distance (5 miles)
+`r sum(x$j_workdis < 10)` of `r nrow(x)` (`r round(100 * sum(x$j_workdis < 10) / nrow(x))` %) of respondents drive to work is less than electric cycling distance (10 miles)
 
 
 ```{r income}

@@ -133,9 +133,11 @@ x %>%
   stat_ecdf() +
   geom_vline(xintercept = 1.5, linetype = "dotted") +
   geom_vline(xintercept = 5, linetype = "dashed") +
-  scale_x_continuous(limits = c(0, 80)) +
+  geom_vline(xintercept = 10, linetype = "dotdash") +
+  coord_cartesian(xlim = c(0, 30)) +
   scale_y_continuous(labels = scales::percent) +
-  labs(title = "How many car commutes could be walked or cycled?",
+  labs(title = "How many car commutes could be active travel?",
+       subtitle = "Vertical lines of: walking, cycling, e-cycling.",
        x = "Distance to work",
        y = "Percent of respondents") +
   theme_temp()
@@ -143,7 +145,12 @@ x %>%
 
 ![](transport_presentation_deets_files/figure-gfm/distance%20mode-1.png)<!-- -->
 
-640 of 9871 (6 %) of respondents drive to work is 1 mile :-(
+-   640 of 9871 (6 %) of respondents drive to work is 1 mile :-(
+-   769 of 9871 (8 %) of respondents drive to work is less than walking
+    distance (1.5 miles)
+-   3189 of 9871 (32 %) of respondents drive to work is less than
+    cycling distance (5 miles) 5762 of 9871 (58 %) of respondents drive
+    to work is less than electric cycling distance (10 miles)
 
 ``` r
 tran_opt = tibble(name = paste0("j_wktrv", c(1:10, 97)),
