@@ -138,7 +138,7 @@ x %>%
   scale_y_continuous(labels = scales::percent) +
   labs(title = "How many car commutes could be active travel?",
        subtitle = "Vertical lines of: walking, cycling, e-cycling.\nNote x axis is cropped.",
-       x = "Distance to work",
+       x = "Distance to work (miles)",
        y = "Percent of respondents") +
   theme_temp()
 ```
