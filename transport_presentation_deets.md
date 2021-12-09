@@ -1,43 +1,33 @@
----
-title: "Transport variable explore"
-author: "Mike Spencer"
-date: "09/12/2021"
-output: github_document
----
+Transport variable explore
+================
+Mike Spencer
+09/12/2021
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE,
-                      message = F, warning = F,
-                      fig.width = 10, fig.height = 6)
-options(scipen = 999)
-```
-
-```{r packages}
+``` r
 library(tidyverse)
 library(haven)
 library(knitr)
 ```
 
-```{r plot theme}
+``` r
 theme_temp = function(){
   theme_bw() +
     theme(text = element_text(size = 15))
 }
 ```
 
-
 ## Intro
 
-This is an RMarkdown document, summarising variables of interest.
-I'm considering the relationship between income and mode of travel.
-For example, is cycling the preserve of the affluent middle class?
+This is an RMarkdown document, summarising variables of interest. I’m
+considering the relationship between income and mode of travel. For
+example, is cycling the preserve of the affluent middle class?
 
-Understanding Society variable guide: <https://www.understandingsociety.ac.uk/documentation/mainstage/dataset-documentation?search_api_views_fulltext=salary>.
-
+Understanding Society variable guide:
+<https://www.understandingsociety.ac.uk/documentation/mainstage/dataset-documentation?search_api_views_fulltext=salary>.
 
 ## Data prep
 
-```{r data}
+``` r
 df = read_dta("~/Cloud/personal/gofcoe/understanding_society/6614stata_B17CC6790677EF32F72CE50881AE98E1B9FC1F79133B07B63B353396D3AB917A_V1/UKDA-6614-stata/stata/stata13_se/ukhls_w10/j_indresp.dta") %>% 
   select(pidp, j_pdvage,
          contains("wktrv"), j_workdis,
@@ -45,7 +35,7 @@ df = read_dta("~/Cloud/personal/gofcoe/understanding_society/6614stata_B17CC6790
          j_benbase1, j_benbase2, j_benbase4)
 ```
 
-```{r data transport, eval = F}
+``` r
 tran_opt = tibble(name = paste0("j_wktrv", c(1:10, 97)),
        val = c("Drive myself", "Get a lift", "Get a lift", "Motorcycle",
                "Taxi", "Bus", "Train", "Light rail",
@@ -61,29 +51,20 @@ df %>%
   mutate(did_they = "Yes") %>% 
   select(-name, -value) %>% 
   pivot_wider(id_cols = pidp, names_from = val, values_from = did_they)
-  
-
-
-
 ```
 
-
-```{r data income}
+``` r
 df = df %>% 
   filter(! j_fimnnet_dv %in% c(-9, -8, -2, -1)) %>% 
   mutate(j_fimnnet_dv = as.numeric(j_fimnnet_dv))
 ```
 
-```{r data dist to work}
+``` r
 df = df %>% 
   filter(j_workdis >= 0)
 ```
 
-
-
-
-
-```{r data multi benefits, eval = F}
+``` r
 df %>% 
   select(pidp, j_benbase1, j_benbase2, j_benbase4) %>% 
   pivot_longer(!pidp) %>% 
@@ -95,7 +76,7 @@ df %>%
 
 ## Age
 
-```{r age, eval = F}
+``` r
 df %>% 
   count(j_pdvage) %>% 
   ggplot(aes(j_pdvage, n)) +
@@ -106,11 +87,9 @@ df %>%
   theme_temp()
 ```
 
-
-
 Employed:
 
-```{r employed, eval = F}
+``` r
 df %>% 
   select(pidp, contains("j_wktrv"), -j_wktrvfar) %>% 
   pivot_longer(cols = !pidp) %>% 
@@ -120,7 +99,7 @@ df %>%
 
 Self employed:
 
-```{r self employed, eval = F}
+``` r
 df %>% 
   select(pidp, contains("j_jswktrv"), -j_jswktrvfar) %>% 
   pivot_longer(cols = !pidp) %>% 
@@ -128,11 +107,12 @@ df %>%
   pivot_wider(names_from = name, values_from = n)
 ```
 
-Larissa Pople notes we can add together travel from employed and self employed categories.
+Larissa Pople notes we can add together travel from employed and self
+employed categories.
 
 ### How many people report multiple modes?
 
-```{r multi-report, eval = F}
+``` r
 df %>% 
   select(pidp, contains("wktrv"), -j_wktrvfar, -j_jswktrvfar) %>% 
   pivot_longer(cols = !pidp) %>% 
@@ -142,10 +122,9 @@ df %>%
   count(modes, name = "respondents")
 ```
 
-
 ## Results
 
-```{r distance mode}
+``` r
 df %>% 
   filter(j_wktrv1 == 1) %>% 
   ggplot(aes(j_workdis)) +
@@ -160,8 +139,9 @@ df %>%
   theme_temp()
 ```
 
+![](transport_presentation_deets_files/figure-gfm/distance%20mode-1.png)<!-- -->
 
-```{r income}
+``` r
 tran_opt = tibble(name = paste0("j_wktrv", c(1:10, 97)),
        val = c("Drive myself", "Get a lift", "Get a lift", "Motorcycle",
                "Taxi", "Bus", "Train", "Light rail",
@@ -189,3 +169,4 @@ x %>%
   theme_temp()
 ```
 
+![](transport_presentation_deets_files/figure-gfm/income-1.png)<!-- -->
