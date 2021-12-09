@@ -158,7 +158,7 @@ x %>%
   coord_cartesian(xlim = c(0, 30)) +
   scale_y_continuous(labels = scales::percent) +
   labs(title = "How many car commutes could be active travel?",
-       subtitle = "Vertical lines of: walking, cycling, e-cycling.",
+       subtitle = "Vertical lines of: walking, cycling, e-cycling.\nNote x axis is cropped.",
        x = "Distance to work",
        y = "Percent of respondents") +
   theme_temp()
@@ -196,7 +196,7 @@ x %>%
   geom_boxplot() +
   coord_cartesian(ylim = c(0, 4000)) +
   labs(title = "What is the monthly income of different transport modes?",
-       subtitle = "n = number in group, m = median of group.\nNote: y axis is cropped.",
+       subtitle = "n = number in group, m = median of group.\nNote y axis is cropped.",
        x = "",
        y = "Income (£)") +
   theme_temp()
