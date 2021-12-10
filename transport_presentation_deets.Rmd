@@ -136,7 +136,7 @@ x %>%
 * `r sum(x$j_workdis == 1)` of `r nrow(x)` (`r round(100 * sum(x$j_workdis == 1) / nrow(x))` %) of respondents drive to work is 1 mile :-(
 * `r sum(x$j_workdis < 1.5)` of `r nrow(x)` (`r round(100 * sum(x$j_workdis < 1.5) / nrow(x))` %) of respondents drive to work is less than walking distance (1.5 miles)
 * `r sum(x$j_workdis < 5)` of `r nrow(x)` (`r round(100 * sum(x$j_workdis < 5) / nrow(x))` %) of respondents drive to work is less than cycling distance (5 miles)
-`r sum(x$j_workdis < 10)` of `r nrow(x)` (`r round(100 * sum(x$j_workdis < 10) / nrow(x))` %) of respondents drive to work is less than electric cycling distance (10 miles)
+* `r sum(x$j_workdis < 10)` of `r nrow(x)` (`r round(100 * sum(x$j_workdis < 10) / nrow(x))` %) of respondents drive to work is less than electric cycling distance (10 miles)
 
 
 ### Income and mode of transport

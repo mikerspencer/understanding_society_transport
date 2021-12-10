@@ -130,8 +130,9 @@ x %>%
 -   769 of 9871 (8 %) of respondents drive to work is less than walking
     distance (1.5 miles)
 -   3189 of 9871 (32 %) of respondents drive to work is less than
-    cycling distance (5 miles) 5762 of 9871 (58 %) of respondents drive
-    to work is less than electric cycling distance (10 miles)
+    cycling distance (5 miles)
+-   5762 of 9871 (58 %) of respondents drive to work is less than
+    electric cycling distance (10 miles)
 
 ### Income and mode of transport
 
