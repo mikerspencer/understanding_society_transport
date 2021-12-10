@@ -39,7 +39,8 @@ df = read_dta("~/Cloud/personal/gofcoe/understanding_society/6614stata_B17CC6790
   select(pidp, j_pdvage, j_sex,
          contains("j_wktrv"), j_workdis,
          j_fimnnet_dv,
-         j_benbase1, j_benbase2, j_benbase4)
+         j_benbase1, j_benbase2, j_benbase4) %>% 
+  mutate(j_sex = as_factor(j_sex))
 ```
 
 ``` r
@@ -78,7 +79,8 @@ df_long = df %>%
   select(contains("j_wktrv"), j_pdvage, j_sex, j_fimnnet_dv, j_workdis) %>% 
   pivot_longer(contains("j_wktrv")) %>% 
   filter(value == 1) %>% 
-  left_join(tran_opt)
+  left_join(tran_opt) %>% 
+  filter(!is.na(val))
 ```
 
 ## Results
@@ -86,23 +88,40 @@ df_long = df %>%
 ### Group sizes
 
 ``` r
-df_long
+df_long %>% 
+  count(val, j_sex) %>% 
+  pivot_wider(names_from = j_sex, values_from = n) %>% 
+  kable()
 ```
 
-    ## # A tibble: 17,407 x 7
-    ##    j_pdvage      j_sex j_fimnnet_dv j_workdis name              value val       
-    ##       <dbl>  <dbl+lbl>        <dbl>     <dbl> <chr>         <dbl+lbl> <chr>     
-    ##  1       33 2 [female]        1290.         3 j_wktrv1 1 [Yes mentio… Drive mys…
-    ##  2       33 2 [female]        1290.         3 j_wktrv6 1 [Yes mentio… Bus       
-    ##  3       33 2 [female]        1290.         3 j_wktrv8 1 [Yes mentio… Light rail
-    ##  4       41 2 [female]        2760          3 j_wktrv1 1 [Yes mentio… Drive mys…
-    ##  5       35 2 [female]        2862         28 j_wktrv1 1 [Yes mentio… Drive mys…
-    ##  6       39 2 [female]        3094.        30 j_wktrv1 1 [Yes mentio… Drive mys…
-    ##  7       28 2 [female]        1742.        10 j_wktrv1 1 [Yes mentio… Drive mys…
-    ##  8       31 2 [female]        2354.        20 j_wktrv6 1 [Yes mentio… Bus       
-    ##  9       31 2 [female]        2354.        20 j_wktrv7 1 [Yes mentio… Train     
-    ## 10       36 1 [male]           254.         1 j_wktrv… 1 [Yes mentio… Walk      
-    ## # … with 17,397 more rows
+| val          | male | female |
+|:-------------|-----:|-------:|
+| Bus          |  457 |    779 |
+| Cycle        |  413 |    212 |
+| Drive myself | 4480 |   5389 |
+| Get a lift   |  408 |    761 |
+| Light rail   |  318 |    292 |
+| Motorcycle   |   97 |     18 |
+| Other        |   54 |     36 |
+| Taxi         |   26 |     85 |
+| Train        |  486 |    429 |
+| Walk         |  830 |   1413 |
+
+``` r
+df_long %>% 
+  count(val, j_sex) %>% 
+  ggplot(aes(val, n, fill = j_sex)) +
+  geom_col(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = "What is the proportion of each sex by transport type?",
+       x = "",
+       y = "Respondents",
+       fill = "") +
+  theme_temp() +
+  theme(legend.position="bottom")
+```
+
+![](transport_presentation_deets_files/figure-gfm/sizes%20plot-1.png)<!-- -->
 
 ### Age and mode of transport
 
@@ -114,7 +133,6 @@ y = df_long %>%
   mutate(lab = paste0(val, "\nn = ", n, "\nm = ", round(median_in)))
 
 df_long %>% 
-  filter(!is.na(val)) %>% 
   left_join(y) %>% 
   mutate(lab = fct_reorder(lab, median_in)) %>% 
   ggplot(aes(lab, j_pdvage)) +
@@ -144,18 +162,18 @@ y = df_long %>%
   mutate(lab = paste0(val, "\nn = ", n, "\nm = ", round(median_in)))
 
 df_long %>% 
-  filter(!is.na(val)) %>% 
   left_join(y) %>% 
-  mutate(lab = fct_reorder(lab, median_in),
-         j_sex = as_factor(j_sex)) %>% 
+  mutate(lab = fct_reorder(lab, median_in)) %>% 
   ggplot(aes(lab, j_pdvage, colour = j_sex)) +
   geom_boxplot() +
   geom_jitter(width = 0.2, alpha = 0.05) +
   labs(title = "What is the age of respondents using different transport modes?",
        subtitle = "n = number in group, m = median of group.",
        x = "",
-       y = "Age (years)") +
-  theme_temp()
+       y = "Age (years)",
+       colour = "") +
+  theme_temp() +
+  theme(legend.position="bottom")
 ```
 
 ![](transport_presentation_deets_files/figure-gfm/age%20and%20sex-1.png)<!-- -->
@@ -167,8 +185,8 @@ x = df %>%
   filter(j_wktrv1 == 1)
 
 x %>% 
-  ggplot(aes(j_workdis)) +
-  stat_ecdf() +
+  ggplot(aes(j_workdis, colour = j_sex)) +
+  stat_ecdf(size = 1.2) +
   geom_vline(xintercept = 1.5, linetype = "dotted") +
   geom_vline(xintercept = 5, linetype = "dashed") +
   geom_vline(xintercept = 10, linetype = "dotdash") +
@@ -177,8 +195,10 @@ x %>%
   labs(title = "How many car commutes could be active travel?",
        subtitle = "Vertical lines of: walking, cycling, e-cycling.\nNote x axis is cropped.",
        x = "Distance to work (miles)",
-       y = "Percent of respondents") +
-  theme_temp()
+       y = "Percent of respondents",
+       colour = "") +
+  theme_temp() +
+  theme(legend.position="bottom")
 ```
 
 ![](transport_presentation_deets_files/figure-gfm/distance%20mode-1.png)<!-- -->
@@ -190,6 +210,10 @@ x %>%
     cycling distance (5 miles)
 -   5762 of 9871 (58 %) of respondents drive to work is less than
     electric cycling distance (10 miles)
+-   More men travel further to work
+-   What are the barriers to women undertaking short journeys
+    sustainably? Is this linked to trip chaining, unsafe routes,
+    something else?
 
 ### Income and mode of transport
 
@@ -201,7 +225,6 @@ y = df_long %>%
   mutate(lab = paste0(val, "\nn = ", n, "\nm = ", round(median_in)))
 
 df_long %>% 
-  filter(!is.na(val)) %>% 
   left_join(y) %>% 
   mutate(lab = fct_reorder(lab, median_in)) %>% 
   ggplot(aes(lab, j_fimnnet_dv)) +
@@ -229,8 +252,7 @@ df_long %>%
 
 ``` r
 df_long %>% 
-  filter(value == 1 &
-           !is.na(val)) %>% 
+  filter(value == 1) %>% 
   ggplot(aes(j_pdvage, j_fimnnet_dv)) +
   geom_point(alpha = 0.15) +
   stat_smooth() +
@@ -246,8 +268,7 @@ df_long %>%
 
 ``` r
 df_long %>% 
-  filter(value == 1 &
-           !is.na(val)) %>% 
+  filter(value == 1) %>% 
   ggplot(aes(j_workdis, j_fimnnet_dv)) +
   geom_point(alpha = 0.15) +
   stat_smooth() +

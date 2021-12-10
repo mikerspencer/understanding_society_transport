@@ -47,7 +47,8 @@ df = read_dta("~/Cloud/personal/gofcoe/understanding_society/6614stata_B17CC6790
   select(pidp, j_pdvage, j_sex,
          contains("j_wktrv"), j_workdis,
          j_fimnnet_dv,
-         j_benbase1, j_benbase2, j_benbase4)
+         j_benbase1, j_benbase2, j_benbase4) %>% 
+  mutate(j_sex = as_factor(j_sex))
 ```
 
 ```{r data transport}
@@ -86,7 +87,8 @@ df_long = df %>%
   select(contains("j_wktrv"), j_pdvage, j_sex, j_fimnnet_dv, j_workdis) %>% 
   pivot_longer(contains("j_wktrv")) %>% 
   filter(value == 1) %>% 
-  left_join(tran_opt)
+  left_join(tran_opt) %>% 
+  filter(!is.na(val))
 ```
 
 
@@ -94,8 +96,25 @@ df_long = df %>%
 
 ### Group sizes
 
-```{r sizes}
-df_long
+```{r sizes table}
+df_long %>% 
+  count(val, j_sex) %>% 
+  pivot_wider(names_from = j_sex, values_from = n) %>% 
+  kable()
+```
+
+```{r sizes plot}
+df_long %>% 
+  count(val, j_sex) %>% 
+  ggplot(aes(val, n, fill = j_sex)) +
+  geom_col(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(title = "What is the proportion of each sex by transport type?",
+       x = "",
+       y = "Respondents",
+       fill = "") +
+  theme_temp() +
+  theme(legend.position="bottom")
 ```
 
 
@@ -109,7 +128,6 @@ y = df_long %>%
   mutate(lab = paste0(val, "\nn = ", n, "\nm = ", round(median_in)))
 
 df_long %>% 
-  filter(!is.na(val)) %>% 
   left_join(y) %>% 
   mutate(lab = fct_reorder(lab, median_in)) %>% 
   ggplot(aes(lab, j_pdvage)) +
@@ -128,7 +146,7 @@ df_long %>%
 
 ### Age, sex and mode of transport
 
-```{r age and sex}
+```{r age and sex, fig.height=7}
 y = df_long %>% 
   group_by(val) %>% 
   summarise(median_in = median(j_pdvage),
@@ -136,30 +154,30 @@ y = df_long %>%
   mutate(lab = paste0(val, "\nn = ", n, "\nm = ", round(median_in)))
 
 df_long %>% 
-  filter(!is.na(val)) %>% 
   left_join(y) %>% 
-  mutate(lab = fct_reorder(lab, median_in),
-         j_sex = as_factor(j_sex)) %>% 
+  mutate(lab = fct_reorder(lab, median_in)) %>% 
   ggplot(aes(lab, j_pdvage, colour = j_sex)) +
   geom_boxplot() +
   geom_jitter(width = 0.2, alpha = 0.05) +
   labs(title = "What is the age of respondents using different transport modes?",
        subtitle = "n = number in group, m = median of group.",
        x = "",
-       y = "Age (years)") +
-  theme_temp()
+       y = "Age (years)",
+       colour = "") +
+  theme_temp() +
+  theme(legend.position="bottom")
 ```
 
 
 ### Replaceable journeys
 
-```{r distance mode}
+```{r distance mode, fig.height=7}
 x = df %>% 
   filter(j_wktrv1 == 1)
 
 x %>% 
-  ggplot(aes(j_workdis)) +
-  stat_ecdf() +
+  ggplot(aes(j_workdis, colour = j_sex)) +
+  stat_ecdf(size = 1.2) +
   geom_vline(xintercept = 1.5, linetype = "dotted") +
   geom_vline(xintercept = 5, linetype = "dashed") +
   geom_vline(xintercept = 10, linetype = "dotdash") +
@@ -168,14 +186,18 @@ x %>%
   labs(title = "How many car commutes could be active travel?",
        subtitle = "Vertical lines of: walking, cycling, e-cycling.\nNote x axis is cropped.",
        x = "Distance to work (miles)",
-       y = "Percent of respondents") +
-  theme_temp()
+       y = "Percent of respondents",
+       colour = "") +
+  theme_temp() +
+  theme(legend.position="bottom")
 ```
 
 * `r sum(x$j_workdis == 1)` of `r nrow(x)` (`r round(100 * sum(x$j_workdis == 1) / nrow(x))` %) of respondents drive to work is 1 mile :-(
 * `r sum(x$j_workdis < 1.5)` of `r nrow(x)` (`r round(100 * sum(x$j_workdis < 1.5) / nrow(x))` %) of respondents drive to work is less than walking distance (1.5 miles)
 * `r sum(x$j_workdis < 5)` of `r nrow(x)` (`r round(100 * sum(x$j_workdis < 5) / nrow(x))` %) of respondents drive to work is less than cycling distance (5 miles)
 * `r sum(x$j_workdis < 10)` of `r nrow(x)` (`r round(100 * sum(x$j_workdis < 10) / nrow(x))` %) of respondents drive to work is less than electric cycling distance (10 miles)
+* More men travel further to work
+* What are the barriers to women undertaking short journeys sustainably? Is this linked to trip chaining, unsafe routes, something else?
 
 
 ### Income and mode of transport
@@ -188,7 +210,6 @@ y = df_long %>%
   mutate(lab = paste0(val, "\nn = ", n, "\nm = ", round(median_in)))
 
 df_long %>% 
-  filter(!is.na(val)) %>% 
   left_join(y) %>% 
   mutate(lab = fct_reorder(lab, median_in)) %>% 
   ggplot(aes(lab, j_fimnnet_dv)) +
@@ -208,13 +229,35 @@ df_long %>%
   * Light rail and train access to more prestigious, city centre jobs.
 * This type of analysis may support transport poverty work - areas with less transport links reduce job options.
 
+```{r income sex}
+y = df_long %>% 
+  group_by(val) %>% 
+  summarise(median_in = median(j_fimnnet_dv),
+            n = n()) %>% 
+  mutate(lab = paste0(val, "\nn = ", n, "\nm = ", round(median_in)))
+
+df_long %>% 
+  left_join(y) %>% 
+  mutate(lab = fct_reorder(lab, median_in)) %>% 
+  ggplot(aes(lab, j_fimnnet_dv, colour = j_sex)) +
+  geom_boxplot(outlier.alpha = 0) +
+  geom_jitter(width = 0.2, alpha = 0.05) +
+  coord_cartesian(ylim = c(0, 4000)) +
+  labs(title = "What is the monthly income of different transport modes?",
+       subtitle = "n = number in group, m = median of group.\nNote y axis is cropped.",
+       x = "",
+       y = "Income (£)",
+       colour = "") +
+  theme_temp() +
+  theme(legend.position="bottom")
+```
+
 
 ### Relationships
 
 ```{r income and age, fig.height = 8}
 df_long %>% 
-  filter(value == 1 &
-           !is.na(val)) %>% 
+  filter(value == 1) %>% 
   ggplot(aes(j_pdvage, j_fimnnet_dv)) +
   geom_point(alpha = 0.15) +
   stat_smooth() +
@@ -228,8 +271,7 @@ df_long %>%
 
 ```{r income and distance, fig.height = 8}
 df_long %>% 
-  filter(value == 1 &
-           !is.na(val)) %>% 
+  filter(value == 1) %>% 
   ggplot(aes(j_workdis, j_fimnnet_dv)) +
   geom_point(alpha = 0.15) +
   stat_smooth() +
