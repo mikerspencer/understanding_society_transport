@@ -40,17 +40,6 @@ tran_opt = tibble(name = paste0("j_wktrv", c(1:10, 97)),
        val = c("Drive myself", "Get a lift", "Get a lift", "Motorcycle",
                "Taxi", "Bus", "Train", "Light rail",
                "Cycle", "Walk", "Other"))
-
-df %>% 
-  select(pidp, contains("wktrv"), -j_wktrvfar, -j_jswktrvfar) %>% 
-  pivot_longer(cols = !pidp) %>% 
-  mutate(name = str_remove(name, "j_js"),
-         name = str_remove(name, "j_")) %>% 
-  left_join(tran_opt) %>% 
-  filter(value == 1) %>% 
-  mutate(did_they = "Yes") %>% 
-  select(-name, -value) %>% 
-  pivot_wider(id_cols = pidp, names_from = val, values_from = did_they)
 ```
 
 ``` r
@@ -65,20 +54,21 @@ df = df %>%
 ```
 
 ``` r
-df %>% 
+x = df %>% 
   select(pidp, j_benbase1, j_benbase2, j_benbase4) %>% 
   pivot_longer(!pidp) %>% 
   mutate(value = replace(value, value < 0, 0)) %>% 
   group_by(pidp) %>% 
-  summarise(benefits = sum(value)) %>% 
-  count(benefits)
+  summarise(benefits = sum(value))
+
+df = df %>% 
+  left_join(x)
 ```
 
 ## Age
 
 ``` r
 df %>% 
-  count(j_pdvage) %>% 
   ggplot(aes(j_pdvage, n)) +
   geom_col() +
   labs(title = "Age of respondents",
@@ -153,11 +143,6 @@ x %>%
     to work is less than electric cycling distance (10 miles)
 
 ``` r
-tran_opt = tibble(name = paste0("j_wktrv", c(1:10, 97)),
-       val = c("Drive myself", "Get a lift", "Get a lift", "Motorcycle",
-               "Taxi", "Bus", "Train", "Light rail",
-               "Cycle", "Walk", "Other"))
-
 x = df %>% 
   select(contains("j_wktrv"), j_fimnnet_dv) %>% 
   pivot_longer(!j_fimnnet_dv) %>% 

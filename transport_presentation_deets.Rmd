@@ -45,28 +45,12 @@ df = read_dta("~/Cloud/personal/gofcoe/understanding_society/6614stata_B17CC6790
          j_benbase1, j_benbase2, j_benbase4)
 ```
 
-```{r data transport, eval = F}
+```{r data transport}
 tran_opt = tibble(name = paste0("j_wktrv", c(1:10, 97)),
        val = c("Drive myself", "Get a lift", "Get a lift", "Motorcycle",
                "Taxi", "Bus", "Train", "Light rail",
                "Cycle", "Walk", "Other"))
-
-df %>% 
-  select(pidp, contains("wktrv"), -j_wktrvfar, -j_jswktrvfar) %>% 
-  pivot_longer(cols = !pidp) %>% 
-  mutate(name = str_remove(name, "j_js"),
-         name = str_remove(name, "j_")) %>% 
-  left_join(tran_opt) %>% 
-  filter(value == 1) %>% 
-  mutate(did_they = "Yes") %>% 
-  select(-name, -value) %>% 
-  pivot_wider(id_cols = pidp, names_from = val, values_from = did_they)
-  
-
-
-
 ```
-
 
 ```{r data income}
 df = df %>% 
@@ -79,25 +63,23 @@ df = df %>%
   filter(j_workdis >= 0)
 ```
 
-
-
-
-
-```{r data multi benefits, eval = F}
-df %>% 
+```{r data multi benefits}
+x = df %>% 
   select(pidp, j_benbase1, j_benbase2, j_benbase4) %>% 
   pivot_longer(!pidp) %>% 
   mutate(value = replace(value, value < 0, 0)) %>% 
   group_by(pidp) %>% 
-  summarise(benefits = sum(value)) %>% 
-  count(benefits)
+  summarise(benefits = sum(value))
+
+df = df %>% 
+  left_join(x)
 ```
+
 
 ## Age
 
 ```{r age, eval = F}
 df %>% 
-  count(j_pdvage) %>% 
   ggplot(aes(j_pdvage, n)) +
   geom_col() +
   labs(title = "Age of respondents",
@@ -171,11 +153,6 @@ x %>%
 
 
 ```{r income}
-tran_opt = tibble(name = paste0("j_wktrv", c(1:10, 97)),
-       val = c("Drive myself", "Get a lift", "Get a lift", "Motorcycle",
-               "Taxi", "Bus", "Train", "Light rail",
-               "Cycle", "Walk", "Other"))
-
 x = df %>% 
   select(contains("j_wktrv"), j_fimnnet_dv) %>% 
   pivot_longer(!j_fimnnet_dv) %>% 
