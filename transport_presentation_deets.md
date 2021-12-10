@@ -1,4 +1,4 @@
-Transport variable explore
+Transport mode analysis
 ================
 Mike Spencer
 09/12/2021
@@ -18,9 +18,10 @@ theme_temp = function(){
 
 ## Intro
 
-This is an RMarkdown document, summarising variables of interest. I’m
-considering the relationship between income and mode of travel. For
-example, is cycling the preserve of the affluent middle class?
+This is an RMarkdown document, presenting and discussing analysis of
+transport mode data. I’m considering the relationship between income and
+mode of travel. For example, is cycling the preserve of the affluent
+middle class?
 
 Understanding Society variable guide:
 <https://www.understandingsociety.ac.uk/documentation/mainstage/dataset-documentation?search_api_views_fulltext=salary>.
@@ -30,12 +31,12 @@ Understanding Society variable guide:
 Only employed people considered, i.e. self employed excluded. This is
 due to the increase in data complexity of including both types.
 
-Non-commuting journeys are not included in the Understanding Society
+Non-commuting journeys are not available in the Understanding Society
 dataset.
 
 ``` r
 df = read_dta("~/Cloud/personal/gofcoe/understanding_society/6614stata_B17CC6790677EF32F72CE50881AE98E1B9FC1F79133B07B63B353396D3AB917A_V1/UKDA-6614-stata/stata/stata13_se/ukhls_w10/j_indresp.dta") %>% 
-  select(pidp, j_pdvage,
+  select(pidp, j_pdvage, j_sex,
          contains("j_wktrv"), j_workdis,
          j_fimnnet_dv,
          j_benbase1, j_benbase2, j_benbase4)
@@ -77,6 +78,7 @@ df = df %>%
 
 ``` r
 x = df %>% 
+  filter(j_pdvage > 0) %>% 
   select(contains("j_wktrv"), j_pdvage) %>% 
   pivot_longer(!j_pdvage) %>% 
   filter(value == 1) %>% 
@@ -94,6 +96,7 @@ x %>%
   mutate(lab = fct_reorder(lab, median_in)) %>% 
   ggplot(aes(lab, j_pdvage)) +
   geom_boxplot() +
+  geom_jitter(width = 0.2, alpha = 0.05) +
   labs(title = "What is the age of respondents using different transport modes?",
        subtitle = "n = number in group, m = median of group.",
        x = "",
@@ -102,6 +105,11 @@ x %>%
 ```
 
 ![](transport_presentation_deets_files/figure-gfm/age-1.png)<!-- -->
+
+-   Younger people are more likely to get a lift to work. Getting a lift
+    is an inherently dependent activity, which is asociated with being
+    young.
+-   Motorbike commuting may increase in midlife ;-)
 
 ### Replaceable journeys
 
@@ -154,7 +162,8 @@ x %>%
   left_join(y) %>% 
   mutate(lab = fct_reorder(lab, median_in)) %>% 
   ggplot(aes(lab, j_fimnnet_dv)) +
-  geom_boxplot() +
+  geom_boxplot(outlier.alpha = 0) +
+  geom_jitter(width = 0.2, alpha = 0.05) +
   coord_cartesian(ylim = c(0, 4000)) +
   labs(title = "What is the monthly income of different transport modes?",
        subtitle = "n = number in group, m = median of group.\nNote y axis is cropped.",
@@ -164,3 +173,62 @@ x %>%
 ```
 
 ![](transport_presentation_deets_files/figure-gfm/income-1.png)<!-- -->
+
+-   3 step changes:
+    -   Get a lift is a dependent activity
+    -   Driving/cycling/motor cycling more automous than bus/taxi travel
+    -   Light rail and train access to more prestigious, city centre
+        jobs.
+-   This type of analysis may support transport poverty work - areas
+    with less transport links reduce job options.
+
+### Relationships
+
+``` r
+df %>% 
+  filter(j_pdvage > 0) %>% 
+  select(contains("j_wktrv"), j_fimnnet_dv, j_pdvage) %>% 
+  pivot_longer(contains("j_wktrv")) %>% 
+  left_join(tran_opt) %>% 
+  filter(value == 1 &
+           !is.na(val)) %>% 
+  ggplot(aes(j_pdvage, j_fimnnet_dv)) +
+  geom_point(alpha = 0.15) +
+  stat_smooth() +
+  facet_wrap(~val) +
+  scale_y_continuous(labels = scales::comma) +
+  labs(title = "How does income relate to age?",
+       x = "Age (years)",
+       y = "Monthly income (£)") +
+  theme_temp()
+```
+
+![](transport_presentation_deets_files/figure-gfm/income%20and%20age-1.png)<!-- -->
+
+``` r
+df %>% 
+  filter(j_pdvage > 0) %>% 
+  select(contains("j_wktrv"), j_fimnnet_dv, j_workdis) %>% 
+  pivot_longer(contains("j_wktrv")) %>% 
+  left_join(tran_opt) %>% 
+  filter(value == 1 &
+           !is.na(val)) %>% 
+  ggplot(aes(j_workdis, j_fimnnet_dv)) +
+  geom_point(alpha = 0.15) +
+  stat_smooth() +
+  facet_wrap(~val) +
+  scale_y_continuous(labels = scales::comma) +
+  coord_cartesian(xlim = c(0, 100)) +
+  labs(title = "How does distance to work relate to age?",
+       subtitle = "Distance axis cropped. Some people may use multiple transport modes",
+       x = "Distance (miles)",
+       y = "Monthly income (£)") +
+  theme_temp()
+```
+
+![](transport_presentation_deets_files/figure-gfm/income%20and%20distance-1.png)<!-- -->
+
+-   On average, people seem to travel further for better paid work.
+-   In practice, I think people are unwilling to travel further for less
+    well paid work. i.e. income does seem to increase with greater
+    distance, but lower incomes drop out.
