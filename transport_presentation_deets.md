@@ -27,10 +27,16 @@ Understanding Society variable guide:
 
 ## Data prep
 
+Only employed people considered, i.e. self employed excluded. This is
+due to the increase in data complexity of including both types.
+
+Non-commuting journeys are not included in the Understanding Society
+dataset.
+
 ``` r
 df = read_dta("~/Cloud/personal/gofcoe/understanding_society/6614stata_B17CC6790677EF32F72CE50881AE98E1B9FC1F79133B07B63B353396D3AB917A_V1/UKDA-6614-stata/stata/stata13_se/ukhls_w10/j_indresp.dta") %>% 
   select(pidp, j_pdvage,
-         contains("wktrv"), j_workdis,
+         contains("j_wktrv"), j_workdis,
          j_fimnnet_dv,
          j_benbase1, j_benbase2, j_benbase4)
 ```
@@ -65,54 +71,39 @@ df = df %>%
   left_join(x)
 ```
 
-## Age
+## Results
+
+### Age and mode of transport
 
 ``` r
-df %>% 
-  ggplot(aes(j_pdvage, n)) +
-  geom_col() +
-  labs(title = "Age of respondents",
-       x = "Age",
-       y = "Respondents") +
+x = df %>% 
+  select(contains("j_wktrv"), j_pdvage) %>% 
+  pivot_longer(!j_pdvage) %>% 
+  filter(value == 1) %>% 
+  left_join(tran_opt)
+
+y = x %>% 
+  group_by(val) %>% 
+  summarise(median_in = median(j_pdvage),
+            n = n()) %>% 
+  mutate(lab = paste0(val, "\nn = ", n, "\nm = ", round(median_in)))
+
+x %>% 
+  filter(!is.na(val)) %>% 
+  left_join(y) %>% 
+  mutate(lab = fct_reorder(lab, median_in)) %>% 
+  ggplot(aes(lab, j_pdvage)) +
+  geom_boxplot() +
+  labs(title = "What is the age of respondents using different transport modes?",
+       subtitle = "n = number in group, m = median of group.",
+       x = "",
+       y = "Age (years)") +
   theme_temp()
 ```
 
-Employed:
+![](transport_presentation_deets_files/figure-gfm/age-1.png)<!-- -->
 
-``` r
-df %>% 
-  select(pidp, contains("j_wktrv"), -j_wktrvfar) %>% 
-  pivot_longer(cols = !pidp) %>% 
-  count(name, value) %>% 
-  pivot_wider(names_from = name, values_from = n)
-```
-
-Self employed:
-
-``` r
-df %>% 
-  select(pidp, contains("j_jswktrv"), -j_jswktrvfar) %>% 
-  pivot_longer(cols = !pidp) %>% 
-  count(name, value) %>% 
-  pivot_wider(names_from = name, values_from = n)
-```
-
-Larissa Pople notes we can add together travel from employed and self
-employed categories.
-
-### How many people report multiple modes?
-
-``` r
-df %>% 
-  select(pidp, contains("wktrv"), -j_wktrvfar, -j_jswktrvfar) %>% 
-  pivot_longer(cols = !pidp) %>% 
-  mutate(name = str_replace(name, "j_js", "j_")) %>% 
-  filter(value == 1) %>% 
-  count(pidp, name = "modes") %>% 
-  count(modes, name = "respondents")
-```
-
-## Results
+### Replaceable journeys
 
 ``` r
 x = df %>% 
@@ -141,6 +132,8 @@ x %>%
 -   3189 of 9871 (32 %) of respondents drive to work is less than
     cycling distance (5 miles) 5762 of 9871 (58 %) of respondents drive
     to work is less than electric cycling distance (10 miles)
+
+### Income and mode of transport
 
 ``` r
 x = df %>% 
