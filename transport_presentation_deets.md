@@ -136,7 +136,7 @@ df_long %>%
   left_join(y) %>% 
   mutate(lab = fct_reorder(lab, median_in)) %>% 
   ggplot(aes(lab, j_pdvage)) +
-  geom_boxplot() +
+  geom_boxplot(size = 1.1) +
   geom_jitter(width = 0.2, alpha = 0.05) +
   labs(title = "What is the age of respondents using different transport modes?",
        subtitle = "n = number in group, m = median of group.",
@@ -165,7 +165,7 @@ df_long %>%
   left_join(y) %>% 
   mutate(lab = fct_reorder(lab, median_in)) %>% 
   ggplot(aes(lab, j_pdvage, colour = j_sex)) +
-  geom_boxplot() +
+  geom_boxplot(size = 1.1) +
   geom_jitter(width = 0.2, alpha = 0.05) +
   labs(title = "What is the age of respondents using different transport modes?",
        subtitle = "n = number in group, m = median of group.",
@@ -228,7 +228,7 @@ df_long %>%
   left_join(y) %>% 
   mutate(lab = fct_reorder(lab, median_in)) %>% 
   ggplot(aes(lab, j_fimnnet_dv)) +
-  geom_boxplot(outlier.alpha = 0) +
+  geom_boxplot(outlier.alpha = 0, size = 1.1) +
   geom_jitter(width = 0.2, alpha = 0.05) +
   coord_cartesian(ylim = c(0, 4000)) +
   labs(title = "What is the monthly income of different transport modes?",
@@ -259,7 +259,7 @@ df_long %>%
   left_join(y) %>% 
   mutate(lab = fct_reorder(lab, median_in)) %>% 
   ggplot(aes(lab, j_fimnnet_dv, colour = j_sex)) +
-  geom_boxplot(outlier.alpha = 0) +
+  geom_boxplot(outlier.alpha = 0, size = 1.1) +
   geom_jitter(width = 0.2, alpha = 0.05) +
   coord_cartesian(ylim = c(0, 4000)) +
   labs(title = "What is the monthly income of different transport modes?",
