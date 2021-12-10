@@ -72,25 +72,48 @@ df = df %>%
   left_join(x)
 ```
 
+``` r
+df_long = df %>% 
+  filter(j_pdvage > 0) %>% 
+  select(contains("j_wktrv"), j_pdvage, j_sex, j_fimnnet_dv, j_workdis) %>% 
+  pivot_longer(contains("j_wktrv")) %>% 
+  filter(value == 1) %>% 
+  left_join(tran_opt)
+```
+
 ## Results
+
+### Group sizes
+
+``` r
+df_long
+```
+
+    ## # A tibble: 17,407 x 7
+    ##    j_pdvage      j_sex j_fimnnet_dv j_workdis name              value val       
+    ##       <dbl>  <dbl+lbl>        <dbl>     <dbl> <chr>         <dbl+lbl> <chr>     
+    ##  1       33 2 [female]        1290.         3 j_wktrv1 1 [Yes mentio… Drive mys…
+    ##  2       33 2 [female]        1290.         3 j_wktrv6 1 [Yes mentio… Bus       
+    ##  3       33 2 [female]        1290.         3 j_wktrv8 1 [Yes mentio… Light rail
+    ##  4       41 2 [female]        2760          3 j_wktrv1 1 [Yes mentio… Drive mys…
+    ##  5       35 2 [female]        2862         28 j_wktrv1 1 [Yes mentio… Drive mys…
+    ##  6       39 2 [female]        3094.        30 j_wktrv1 1 [Yes mentio… Drive mys…
+    ##  7       28 2 [female]        1742.        10 j_wktrv1 1 [Yes mentio… Drive mys…
+    ##  8       31 2 [female]        2354.        20 j_wktrv6 1 [Yes mentio… Bus       
+    ##  9       31 2 [female]        2354.        20 j_wktrv7 1 [Yes mentio… Train     
+    ## 10       36 1 [male]           254.         1 j_wktrv… 1 [Yes mentio… Walk      
+    ## # … with 17,397 more rows
 
 ### Age and mode of transport
 
 ``` r
-x = df %>% 
-  filter(j_pdvage > 0) %>% 
-  select(contains("j_wktrv"), j_pdvage) %>% 
-  pivot_longer(!j_pdvage) %>% 
-  filter(value == 1) %>% 
-  left_join(tran_opt)
-
-y = x %>% 
+y = df_long %>% 
   group_by(val) %>% 
   summarise(median_in = median(j_pdvage),
             n = n()) %>% 
   mutate(lab = paste0(val, "\nn = ", n, "\nm = ", round(median_in)))
 
-x %>% 
+df_long %>% 
   filter(!is.na(val)) %>% 
   left_join(y) %>% 
   mutate(lab = fct_reorder(lab, median_in)) %>% 
@@ -110,6 +133,32 @@ x %>%
     is an inherently dependent activity, which is asociated with being
     young.
 -   Motorbike commuting may increase in midlife ;-)
+
+### Age, sex and mode of transport
+
+``` r
+y = df_long %>% 
+  group_by(val) %>% 
+  summarise(median_in = median(j_pdvage),
+            n = n()) %>% 
+  mutate(lab = paste0(val, "\nn = ", n, "\nm = ", round(median_in)))
+
+df_long %>% 
+  filter(!is.na(val)) %>% 
+  left_join(y) %>% 
+  mutate(lab = fct_reorder(lab, median_in),
+         j_sex = as_factor(j_sex)) %>% 
+  ggplot(aes(lab, j_pdvage, colour = j_sex)) +
+  geom_boxplot() +
+  geom_jitter(width = 0.2, alpha = 0.05) +
+  labs(title = "What is the age of respondents using different transport modes?",
+       subtitle = "n = number in group, m = median of group.",
+       x = "",
+       y = "Age (years)") +
+  theme_temp()
+```
+
+![](transport_presentation_deets_files/figure-gfm/age%20and%20sex-1.png)<!-- -->
 
 ### Replaceable journeys
 
@@ -145,19 +194,13 @@ x %>%
 ### Income and mode of transport
 
 ``` r
-x = df %>% 
-  select(contains("j_wktrv"), j_fimnnet_dv) %>% 
-  pivot_longer(!j_fimnnet_dv) %>% 
-  filter(value == 1) %>% 
-  left_join(tran_opt)
-
-y = x %>% 
+y = df_long %>% 
   group_by(val) %>% 
   summarise(median_in = median(j_fimnnet_dv),
             n = n()) %>% 
   mutate(lab = paste0(val, "\nn = ", n, "\nm = ", round(median_in)))
 
-x %>% 
+df_long %>% 
   filter(!is.na(val)) %>% 
   left_join(y) %>% 
   mutate(lab = fct_reorder(lab, median_in)) %>% 
@@ -185,11 +228,7 @@ x %>%
 ### Relationships
 
 ``` r
-df %>% 
-  filter(j_pdvage > 0) %>% 
-  select(contains("j_wktrv"), j_fimnnet_dv, j_pdvage) %>% 
-  pivot_longer(contains("j_wktrv")) %>% 
-  left_join(tran_opt) %>% 
+df_long %>% 
   filter(value == 1 &
            !is.na(val)) %>% 
   ggplot(aes(j_pdvage, j_fimnnet_dv)) +
@@ -206,11 +245,7 @@ df %>%
 ![](transport_presentation_deets_files/figure-gfm/income%20and%20age-1.png)<!-- -->
 
 ``` r
-df %>% 
-  filter(j_pdvage > 0) %>% 
-  select(contains("j_wktrv"), j_fimnnet_dv, j_workdis) %>% 
-  pivot_longer(contains("j_wktrv")) %>% 
-  left_join(tran_opt) %>% 
+df_long %>% 
   filter(value == 1 &
            !is.na(val)) %>% 
   ggplot(aes(j_workdis, j_fimnnet_dv)) +
