@@ -248,6 +248,31 @@ df_long %>%
 -   This type of analysis may support transport poverty work - areas
     with less transport links reduce job options.
 
+``` r
+y = df_long %>% 
+  group_by(val) %>% 
+  summarise(median_in = median(j_fimnnet_dv),
+            n = n()) %>% 
+  mutate(lab = paste0(val, "\nn = ", n, "\nm = ", round(median_in)))
+
+df_long %>% 
+  left_join(y) %>% 
+  mutate(lab = fct_reorder(lab, median_in)) %>% 
+  ggplot(aes(lab, j_fimnnet_dv, colour = j_sex)) +
+  geom_boxplot(outlier.alpha = 0) +
+  geom_jitter(width = 0.2, alpha = 0.05) +
+  coord_cartesian(ylim = c(0, 4000)) +
+  labs(title = "What is the monthly income of different transport modes?",
+       subtitle = "n = number in group, m = median of group.\nNote y axis is cropped.",
+       x = "",
+       y = "Income (£)",
+       colour = "") +
+  theme_temp() +
+  theme(legend.position="bottom")
+```
+
+![](transport_presentation_deets_files/figure-gfm/income%20sex-1.png)<!-- -->
+
 ### Relationships
 
 ``` r

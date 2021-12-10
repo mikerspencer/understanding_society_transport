@@ -229,7 +229,7 @@ df_long %>%
   * Light rail and train access to more prestigious, city centre jobs.
 * This type of analysis may support transport poverty work - areas with less transport links reduce job options.
 
-```{r income sex}
+```{r income sex, fig.height=7}
 y = df_long %>% 
   group_by(val) %>% 
   summarise(median_in = median(j_fimnnet_dv),
