@@ -108,9 +108,21 @@ df_long %>%
 | Walk         |  830 |   1413 |
 
 ``` r
+x = df_long %>% 
+  count(val, name = "tot") %>% 
+  mutate(lab = paste0(val, "\nn = ", tot))
+
+y = df_long %>% 
+  filter(j_sex == "female") %>% 
+  count(val, name = "n_women")
+
 df_long %>% 
   count(val, j_sex) %>% 
-  ggplot(aes(val, n, fill = j_sex)) +
+  left_join(x) %>% 
+  left_join(y) %>% 
+  mutate(pos = n_women / tot,
+         lab = fct_reorder(lab, pos)) %>% 
+  ggplot(aes(lab, n, fill = j_sex)) +
   geom_col(position = "fill") +
   scale_y_continuous(labels = scales::percent) +
   labs(title = "What is the proportion of each sex by transport type?",
