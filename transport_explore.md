@@ -29,7 +29,9 @@ Understanding Society variable guide:
 df = read_dta("~/Cloud/personal/gofcoe/understanding_society/6614stata_B17CC6790677EF32F72CE50881AE98E1B9FC1F79133B07B63B353396D3AB917A_V1/UKDA-6614-stata/stata/stata13_se/ukhls_w10/j_indresp.dta")
 ```
 
-## Age
+## Demographics
+
+### Age
 
 ``` r
 df %>% 
@@ -43,6 +45,19 @@ df %>%
 ```
 
 ![](transport_explore_files/figure-gfm/age-1.png)<!-- -->
+
+### Sex
+
+``` r
+df %>% 
+  count(j_sex)
+```
+
+    ## # A tibble: 2 x 2
+    ##        j_sex     n
+    ##    <dbl+lbl> <int>
+    ## 1 1 [male]   15383
+    ## 2 2 [female] 18935
 
 ## Transport to work variables
 

@@ -38,7 +38,9 @@ Understanding Society variable guide: <https://www.understandingsociety.ac.uk/do
 df = read_dta("~/Cloud/personal/gofcoe/understanding_society/6614stata_B17CC6790677EF32F72CE50881AE98E1B9FC1F79133B07B63B353396D3AB917A_V1/UKDA-6614-stata/stata/stata13_se/ukhls_w10/j_indresp.dta")
 ```
 
-## Age
+## Demographics
+
+### Age
 
 ```{r age}
 df %>% 
@@ -49,6 +51,14 @@ df %>%
        x = "Age",
        y = "Respondents") +
   theme_temp()
+```
+
+
+### Sex
+
+```{r sex}
+df %>% 
+  count(j_sex)
 ```
 
 
